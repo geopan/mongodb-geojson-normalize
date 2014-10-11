@@ -1,4 +1,4 @@
-mongodb-geojson-normalized
-==========================
+mongodb-geojson-normalize
+=========================
 
 GoeJSON normalization for mongodb

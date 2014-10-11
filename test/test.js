@@ -28,152 +28,63 @@ describe('GeoJSON', function() {
 		before(function() {
 			// Sample Data
 			data = [
-				{ name: 'Location A', category: 'Store', lat: 39.984, lng: -75.343, street: 'Market' },
-				{ name: 'Location B', category: 'House', lat: 39.284, lng: -75.833, street: 'Broad' },
-				{ name: 'Location C', category: 'Office', lat: 39.123, lng: -74.534, street: 'South' }
+				{
+					"reference" : "CT20613",
+					"location" : "A",
+					"geom" : { "coordinates" : [ 151.20340999, -33.88516821 ], "type" : "Point" }
+				}, {
+					"reference" : "CT20612",
+					"location" : "B",
+					"geom" : { "coordinates" : [ 151.20344137, -33.88509032 ], "type" : "Point" }
+				}, {
+					"reference" : "CT20633",
+					"location" : "C",
+					"geom" : { "coordinates" : [ 151.20828846, -33.83591441 ], "type" : "Point" }
+				}
 			];
 		});
 
 		it('returns output with the same number of features as the input', function(){
-			var output = GeoJSON.parse(data, {Point: ['lat', 'lng']});
+			var output = GeoJSON.parse(data, 'geom');
 
 			expect(output.features.length).to.be(3);
 		});
 
 		it('doesn\'t include geometry fields in feature properties', function(){
-			var output = GeoJSON.parse(data, {Point: ['lat', 'lng']});
-
+			var output = GeoJSON.parse(data, 'geom');
 			output.features.forEach(function(feature){
-				expect(feature.properties.lat).to.not.be.ok();
-				expect(feature.properties.lng).to.not.be.ok();
+				expect(feature.properties.geom).to.not.be.ok();
 				expect(feature.geometry.coordinates[0]).to.be.ok();
 				expect(feature.geometry.coordinates[1]).to.be.ok();
 			});
 		});
 
 		it('includes all properties besides geometry attributes when include or exclude isn\'t set', function() {
-			var output = GeoJSON.parse(data, {Point: ['lat', 'lng']});
+			var output = GeoJSON.parse(data, {path: 'geom'});
 
 			output.features.forEach(function(feature){
-				expect(feature.properties.name).to.be.ok();
-				expect(feature.properties.category).to.be.ok();
-				expect(feature.properties.street).to.be.ok();
+
+				expect(feature.properties.reference).to.be.ok();
+				expect(feature.properties.location).to.be.ok();
 			});
 		});
 
 		it('only includes attributes that are listed in the include parameter', function(){
-			var output = GeoJSON.parse(data, {Point: ['lat', 'lng'], include: ['name']});
+			var output = GeoJSON.parse(data, {path: 'geom', include: ['reference']});
 
 			output.features.forEach(function(feature){
-				expect(feature.properties.name).to.be.ok();
-				expect(feature.properties.category).to.not.be.ok();
-				expect(feature.properties.street).to.not.be.ok();
+				expect(feature.properties.reference).to.be.ok();
+				expect(feature.properties.location).to.not.be.ok();
 			});
 		});
 
 
 		it('does not include attributes listed in the exclude parameter', function(){
-			var output = GeoJSON.parse(data, {Point: ['lat', 'lng'], exclude: ['name']});
+			var output = GeoJSON.parse(data, {path: 'geom', exclude: ['location']});
 
 			output.features.forEach(function(feature){
-				expect(feature.properties.name).to.not.be.ok();
-				expect(feature.properties.category).to.be.ok();
-				expect(feature.properties.street).to.be.ok();
-			});
-		});
-
-		it('handles Point geom with x,y stored in one or two attributes', function(){
-			var twoAttrs = [{ name: 'test location', y: -74, x: 39.0, foo: 'bar' }];
-
-			var geoTwoAttrs = GeoJSON.parse(twoAttrs, {Point: ['x', 'y']});
-
-			expect(geoTwoAttrs.features[0].geometry.coordinates[0]).to.be(-74);
-			expect(geoTwoAttrs.features[0].geometry.coordinates[1]).to.be(39.0);
-
-			var oneAttr = [{ name: 'test location', coords: [-74, 39], foo: 'bar'}];
-
-			var geoOneAttr = GeoJSON.parse(oneAttr, {Point: 'coords'});
-
-			expect(geoOneAttr.features[0].geometry.coordinates[0]).to.be(-74);
-			expect(geoOneAttr.features[0].geometry.coordinates[1]).to.be(39.0);
-		});
-
-		it('parses data with different geometry types', function(){
-			// Based off example spec at http://geojson.org/geojson-spec.html
-			var data2 = [
-				{
-					x: 0.5,
-					y: 102.0,
-					prop0: 'value0'
-				},
-				{
-					line: [[102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]],
-					prop0: 'value0',
-					prop1: 0.0
-				},
-				{
-					polygon: [
-						[ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ]
-					],
-					prop0: 'value0',
-					prop1: {"this": "that"}
-				},
-				{
-					multipoint: [
-						[100.0, 0.0], [101.0, 1.0]
-					],
-					prop0: 'value0'
-				},
-				{
-					multipolygon: [
-						[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
-						[[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
-						 [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
-					],
-					prop1: {'this': 'that'}
-				},
-				{
-					multilinestring: [
-						[ [100.0, 0.0], [101.0, 1.0] ],
-						[ [102.0, 2.0], [103.0, 3.0] ]
-					],
-					prop0: 'value1'
-				}
-			];
-
-			var output = GeoJSON.parse(data2, {
-				'Point': ['x', 'y'],
-				'LineString': 'line',
-				'Polygon': 'polygon',
-				'MultiPoint': 'multipoint',
-				'MultiPolygon': 'multipolygon',
-				'MultiLineString': 'multilinestring'
-			});
-
-			expect(output.features.length).to.be(6);
-
-			output.features.forEach(function(feature){
-				if(feature.geometry.type === 'Point') {
-					expect(feature.geometry.coordinates[1]).to.be(0.5);
-					expect(feature.geometry.coordinates[0]).to.be(102);
-					expect(feature.properties.prop0).to.be("value0");
-				} else if (feature.geometry.type === 'LineString') {
-					expect(feature.geometry.coordinates.length).to.be(4);
-					expect(feature.geometry.coordinates[0][1]).to.be(0);
-					expect(feature.geometry.coordinates[0][0]).to.be(102);
-					expect(feature.geometry.coordinates[3][1]).to.be(1);
-					expect(feature.geometry.coordinates[3][0]).to.be(105);
-					expect(feature.properties.prop0).to.be("value0");
-					expect(feature.properties.prop1).to.be(0);
-				} else if (feature.geometry.type === 'Polygon') {
-					expect(feature.geometry.coordinates[0].length).to.be(5);
-					expect(feature.geometry.coordinates[0][0][1]).to.be(0);
-					expect(feature.geometry.coordinates[0][0][0]).to.be(100);
-					expect(feature.geometry.coordinates[0][4][1]).to.be(0);
-					expect(feature.geometry.coordinates[0][4][0]).to.be(100);
-					expect(feature.properties.prop0).to.be("value0");
-					expect(feature.properties.prop1['this']).to.be('that');
-				}
+				expect(feature.properties.reference).to.be.ok();
+				expect(feature.properties.location).to.not.be.ok();
 			});
 		});
 
@@ -291,7 +202,7 @@ describe('GeoJSON', function() {
 		});
 
 		it("calls the calback function if one is provided", function(done){
-			GeoJSON.parse(data, {Point: ['lat', 'lng']}, function(geojson){
+			GeoJSON.parse(data, {path: 'geom'}, function(geojson){
 				expect(geojson.features.length).to.be(3);
 
 				geojson.features.forEach(function(feature){
@@ -306,7 +217,7 @@ describe('GeoJSON', function() {
 		});
 
 		it("returns the GeoJSON output if the callback parameter is not a function", function(){
-			var output = GeoJSON.parse(data, {Point: ['lat', 'lng']}, 'foo');
+			var output = GeoJSON.parse(data, {path: 'geom'}, 'foo');
 
 			output.features.forEach(function(feature){
 				expect(feature.properties.lat).to.not.be.ok();

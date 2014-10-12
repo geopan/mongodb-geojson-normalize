@@ -60,7 +60,7 @@ var output = GeoJSON.parse(data, {path:'geom'});
 
 ```
 
-Convert the example data to GeoJSON, and only include the name attribute in properties for each feature.
+Convert the example data to GeoJSON, and only include the reference attribute in properties for each feature.
 
 ```javascript
 var ouput = GeoJSON.parse(data, {path: 'geom', include: ['reference']});

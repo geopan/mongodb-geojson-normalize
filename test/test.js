@@ -28,31 +28,22 @@ describe('GeoJSON', function() {
 		before(function() {
 			// Sample Data
 			data = [
-				{
-					"reference" : "CT20613",
-					"location" : "A",
-					"geom" : { "coordinates" : [ 151.20340999, -33.88516821 ], "type" : "Point" }
-				}, {
-					"reference" : "CT20612",
-					"location" : "B",
-					"geom" : { "coordinates" : [ 151.20344137, -33.88509032 ], "type" : "Point" }
-				}, {
-					"reference" : "CT20633",
-					"location" : "C",
-					"geom" : { "coordinates" : [ 151.20828846, -33.83591441 ], "type" : "Point" }
-				}
+				{ "reference" : "RKJ092", "location" : "George St",
+				 "geom" : { "coordinates" : [ 151.20340999, -33.88516821 ], "type" : "Point" } },
+				{ "reference" : "GHT078", "location" : "Market Pl",
+				 "geom" : { "coordinates" : [ 151.20344137, -33.88509032 ], "type" : "Point" }	}
 			];
 		});
 
 		it('returns output with the same number of features as the input', function(){
-			var output = GeoJSON.parse(data, 'geom');
-
+			var output = GeoJSON.parse(data, {path:'geom'});
 			expect(output.features.length).to.be(3);
 		});
 
 		it('doesn\'t include geometry fields in feature properties', function(){
-			var output = GeoJSON.parse(data, 'geom');
+			var output = GeoJSON.parse(data, {path:'geom'});
 			output.features.forEach(function(feature){
+				console.log(feature.geometry);
 				expect(feature.properties.geom).to.not.be.ok();
 				expect(feature.geometry.coordinates[0]).to.be.ok();
 				expect(feature.geometry.coordinates[1]).to.be.ok();

@@ -103,6 +103,8 @@ GeoJSON.parse(data, {path: 'geom'}, function(geojson) {
 
 #### Geometry
 
+Default value: geom
+
 The `path` parameter specifies which attribute contains the geometric data (where the 2dsphere is).
 
 #### include/exclude

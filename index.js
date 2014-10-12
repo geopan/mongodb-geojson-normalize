@@ -6,7 +6,7 @@ function GeoJSON() {
 
 	var _this = this;
 
-	this.version = '0.1.0';
+	this.version = '0.1.2';
 
 	// Helper functions
 	this.geomAttr = '';

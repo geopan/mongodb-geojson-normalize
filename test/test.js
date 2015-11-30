@@ -1,112 +1,81 @@
-if (typeof window === 'undefined') {
-	var expect = require('expect.js');
-	var GeoJSON = require('../index');
-}
+'use strick';
 
-describe('GeoJSON', function() {
+var chai = require('chai'),
+    expect = chai.expect,
+    GeoJSON = require('../index');
 
-	describe('#parse', function(){
-		var data;
+describe('GeoJSON parse', function() {
 
-		before(function() {
-			// Sample Data
-			data = [
-				{ "reference" : "RKJ092", "location" : "George St",
-				 "geom" : { "coordinates" : [ 151.20340999, -33.88516821 ], "type" : "Point" } },
-				{ "reference" : "GHT078", "location" : "Market Pl",
-				 "geom" : { "coordinates" : [ 151.20344137, -33.88509032 ], "type" : "Point" }	}
-			];
-		});
+  var data;
 
-		it('returns output with the same number of features as the input', function(){
-			var output = GeoJSON.parse(data, {path:'geom'});
-			expect(output.features.length).to.be(data.length);
-		});
+  before(function() {
+    // Sample Data
+    data = [
+      { "reference" : "RKJ092", "location" : "George St",
+       "geom" : { "coordinates" : [ 151.20340999, -33.88516821 ], "type" : "Point" } },
+      { "reference" : "GHT078", "location" : "Market Pl",
+       "geom" : { "coordinates" : [ 151.20344137, -33.88509032 ], "type" : "Point" }	}
+    ];
 
-		it('doesn\'t include geometry fields in feature properties', function(){
-			var output = GeoJSON.parse(data, {path:'geom'});
-			output.features.forEach(function(feature){
-				expect(feature.properties.geom).to.not.be.ok();
-				expect(feature.geometry.coordinates[0]).to.be.ok();
-				expect(feature.geometry.coordinates[1]).to.be.ok();
-			});
-		});
+  });
 
-		it('includes all properties besides geometry attributes when include or exclude isn\'t set', function() {
-			var output = GeoJSON.parse(data, {path: 'geom'});
-
-			output.features.forEach(function(feature){
-
-				expect(feature.properties.reference).to.be.ok();
-				expect(feature.properties.location).to.be.ok();
-			});
-		});
-
-		it('only includes attributes that are listed in the include parameter', function(){
-			var output = GeoJSON.parse(data, {path: 'geom', include: ['reference']});
-
-			output.features.forEach(function(feature){
-				expect(feature.properties.reference).to.be.ok();
-				expect(feature.properties.location).to.not.be.ok();
-			});
-		});
+  it('should return a well formated GeoJSON.', function(done) {
+    GeoJSON.parse(data, {path:'geom'}, function(err, geojson) {
+      if (err) return done(err);
+      expect(geojson).to.be.an('object');
+      expect(geojson).to.have.property('type').which.equal('FeatureCollection');
+      expect(geojson).to.have.property('features').which.is.an('array');
+      expect(geojson.features).to.have.length(data.length);
+      expect(geojson.features[0]).to.have.property('type').which.equal('Feature');
+      expect(geojson.features[0]).to.have.property('geometry').which.is.an('object');
+      expect(geojson.features[0]).to.have.property('properties').which.is.an('object');
+      expect(geojson.features[0].properties).to.not.have.property('geom');
+      return done();
+    });
+  });
 
 
-		it('does not include attributes listed in the exclude parameter', function(){
-			var output = GeoJSON.parse(data, {path: 'geom', exclude: ['location']});
+  it('should only include attributes listed in the include parameter', function(done) {
+    GeoJSON.parse(data, {path: 'geom', include: ['reference']}, function(err, geojson) {
+      if (err) return done(err);
+      var prop = geojson.features[0].properties;
+      expect(prop).to.have.property('reference');
+      expect(prop).to.not.have.property('location');
+      return done();
+    });
+  });
 
-			output.features.forEach(function(feature){
-				expect(feature.properties.reference).to.be.ok();
-				expect(feature.properties.location).to.not.be.ok();
-			});
-		});
+  it('should not include attributes listed in the exclude parameter', function(done) {
+    GeoJSON.parse(data, {path: 'geom', exclude: ['reference']}, function(err, geojson) {
+      if (err) return done(err);
+      var prop = geojson.features[0].properties;
+      expect(prop).to.have.property('location');
+      expect(prop).to.not.have.property('reference');
+      return done();
+    });
+  });
 
-		it("returns valid GeoJSON output when path equals 'geom' but is not difined", function(){
-			var output = GeoJSON.parse(data);
-			expect(output.features.length).to.be(data.length);
-			output.features.forEach(function(feature){
-				expect(feature.properties.reference).to.be.ok();
-				expect(feature.properties.location).to.be.ok();
-			});
-		});
+  it("should return a valid GeoJSON output when path equals 'geom' but is not difined", function(done) {
+    GeoJSON.parse(data, function(err, geojson) {
+      if (err) return done(err);
+      expect(geojson).to.be.an('object');
+      expect(geojson).to.have.property('type').which.equal('FeatureCollection');
+      expect(geojson).to.have.property('features').which.is.an('array');
+      expect(geojson.features).to.have.length(data.length);
+      expect(geojson.features[0]).to.have.property('type').which.equal('Feature');
+      expect(geojson.features[0]).to.have.property('geometry').which.is.an('object');
+      expect(geojson.features[0]).to.have.property('properties').which.is.an('object');
+      expect(geojson.features[0].properties).to.not.have.property('geom');
+      return done();
+    });
+  });
 
+  it("returns the GeoJSON output if no callback", function(){
+    var output = GeoJSON.parse(data, {path: 'geom'});
+    output.features.forEach(function(feature){
+      expect(feature).to.have.property('properties');
+      expect(feature).to.have.property('geometry');
+    });
+  });
 
-		it("returns valid GeoJSON output when input length is 0", function(done){
-			GeoJSON.parse([], {path: 'geom'}, function(geojson){
-				expect(geojson.type).to.be('FeatureCollection');
-				expect(geojson.features).to.be.an('array');
-				expect(geojson.features.length).to.be(0);
-				done();
-			});
-		});
-
-
-		it("calls the calback function if one is provided", function(done){
-			GeoJSON.parse(data, {path: 'geom'}, function(geojson){
-
-				expect(geojson.features.length).to.be(data.length);
-
-				geojson.features.forEach(function(feature){
-					expect(feature.properties.lat).to.not.be.ok();
-					expect(feature.properties.lng).to.not.be.ok();
-					expect(feature.geometry.coordinates[0]).to.be.ok();
-					expect(feature.geometry.coordinates[1]).to.be.ok();
-				});
-
-				done();
-			});
-		});
-
-		it("returns the GeoJSON output if the callback parameter is not a function", function(){
-			var output = GeoJSON.parse(data, {path: 'geom'}, 'foo');
-
-			output.features.forEach(function(feature){
-				expect(feature.properties.lat).to.not.be.ok();
-				expect(feature.properties.lng).to.not.be.ok();
-				expect(feature.geometry.coordinates[0]).to.be.ok();
-				expect(feature.geometry.coordinates[1]).to.be.ok();
-			});
-		});
-
-	});
 });

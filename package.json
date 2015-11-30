@@ -1,38 +1,40 @@
 {
-	"name": "mongodb-geojson-normalize",
-	"version": "0.1.2",
-	"description": "normalize geojson forms from mongodb into featurecollections",
-	"author": "Guillaume de Boyer <gdeboyer@gmail.com>",
-	"main": "index.js",
-	"repository": {
-		"type": "git",
-		"url": "git@github.com:geopan/mongodb-geojson-normalize.git"
-	},
-	"keywords": [
-		"mongo",
-		"mongodb",
-		"geojson",
-		"normalize",
-		"parse",
-		"featurecollection"
-	],
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/geopan/mongodb-geojson-normalize/issues"
-	},
-	"homepage": "https://github.com/geopan/mongodb-geojson-normalize",
-	"dependencies": {},
-	"devDependencies": {
-		"grunt": "~0.4.5",
-		"grunt-contrib-jshint": "~0.10.0",
-		"grunt-simple-mocha": "~0.4.0",
-		"mocha": "~1.21.4",
-		"expect.js": "~0.3.1"
-	},
-	"engines": {
-		"node": "0.10.x"
-	},
-	"scripts": {
-		"test": "mocha"
-	}
+  "name": "mongodb-geojson-normalize",
+  "version": "1.0.0",
+  "description": "normalize geojson forms from mongodb into featurecollections",
+  "author": "Guillaume de Boyer <gdeboyer@gmail.com>",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:geopan/mongodb-geojson-normalize.git"
+  },
+  "keywords": [
+    "mongo",
+    "mongodb",
+    "geojson",
+    "normalize",
+    "parse",
+    "featurecollection"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/geopan/mongodb-geojson-normalize/issues"
+  },
+  "homepage": "https://github.com/geopan/mongodb-geojson-normalize",
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.11.3",
+    "grunt-simple-mocha": "^0.4.0",
+    "mocha": "^2.3.4"
+  },
+  "engines": {
+    "node": ">=0.10.x"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "async": "^1.5.0"
+  }
 }

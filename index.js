@@ -2,88 +2,132 @@
  * Copyright (c) 2014 Guillaume de Boyer
  */
 
+var config = require('./package.json'),
+    async = require('async');
+
 function GeoJSON() {
 
-	var _this = this;
+  var _this = this;
 
-	this.version = '0.1.2';
+  this.version = config.verion;
 
-	// Helper functions
-	this.geomAttr = '';
+  // Helper functions
+  this.geomAttr = '';
 
-	// The one and only public function.
-	// Converts an array of objects into a GeoJSON feature collection
-	this.parse = function(objects, params, callback) {
+  // The one and only public function.
+  // Converts an array of objects into a GeoJSON feature collection
+  this.parse = function(documents, params, callback) {
 
-		var geojson = {"type": "FeatureCollection", "features": []},
-				propFunc;
+    var geojson = { "type": "FeatureCollection", features: [] },
+        features = [],
+        propFunc,
+        _this = this;
 
-		params = params || {};
+    if (arguments.length === 2) {
+      if (typeof arguments[1] === 'object') {
+        params = params;
+      } else if (typeof arguments[1] === 'function') {
+        callback = arguments[1];
+        params = {};
+      }
+    }
 
-		this.geomAttr = params.path || 'geom'; // Reset the geometry fields
-		propFunc = getPropFunction(params);
+    if (arguments.length === 3) {
+      if (typeof arguments[2] !== 'function') {
+        return new Error('Callback is not a Function');
+      }
+      if (!arguments[0].length) {
+        return callback(new Error('Data is not an array'));
+      }
+    }
 
-		objects.forEach(function(item){
-			geojson.features.push(getFeature(item, propFunc));
-		});
+    this.geomAttr = params.path || 'geom'; // Reset the geometry fields
 
-		if (callback && typeof callback === 'function') {
-			callback(geojson);
-		} else {
-			return geojson;
-		}
-	};
+    propFunc = getPropFunction(params);
 
-	// Returns the function to be used to
-	// build the properties object for each feature
-	function getPropFunction(params) {
+    if (callback) {
 
-		var func;
+      // The asynchronous way;
 
-		if(!params.exclude && !params.include) {
-			func = function(properties) {
-				for(var attr in this) {
-					if(this.hasOwnProperty(attr) && _this.geomAttr !== attr) {
-						properties[attr] = this[attr];
-					}
-				}
-			};
-		} else if(params.include) {
-			func = function(properties) {
-				params.include.forEach(function(attr){
-					properties[attr] = this[attr];
-				}, this);
-			};
-		} else if(params.exclude) {
-			func = function(properties) {
-				for(var attr in this) {
-					if(this.hasOwnProperty(attr) && _this.geomAttr !== attr && (params.exclude.indexOf(attr) === -1)) {
-						properties[attr] = this[attr];
-					}
-				}
-			};
-		}
+      async.each(documents, function(doc, next) {
 
-		return function() {
-			var properties = {};
+        if (!doc[_this.geomAttr]) return next(new Error('No geometry for document' + doc._id));
 
-			func.call(this, properties);
+        features.push({
+          type: "Feature",
+          geometry: doc[_this.geomAttr],
+          properties: propFunc.call(doc)
+        });
+        return next();
+      }, function(err) {
 
-			if(params.extra) { this.addExtra(properties, params.extra); }
-			return properties;
-		};
-	}
+        geojson.features = features;
+        if (callback && typeof callback === 'function') {
+          callback(err, geojson);
+        } else {
+          return geojson;
+        }
 
-	// Creates a feature object to be added
-	// to the GeoJSON features array
-	function getFeature(item, propFunc) {
-		var feature = { "type": "Feature" };
+      });
 
-		feature.geometry = item[_this.geomAttr];
-		feature.properties = propFunc.call(item);
+    } else {
 
-		return feature;
-	}
+      // The Synchronous way
+
+      documents.forEach(function(doc){
+        features.push({
+          type: "Feature",
+          geometry: doc[_this.geomAttr],
+          properties: propFunc.call(doc)
+        });
+      });
+
+      geojson.features = features;
+      return geojson;
+
+    }
+
+  };
+
+  // Returns the function to be used to
+  // build the properties object for each feature
+  function getPropFunction(params) {
+
+    var func;
+
+    if(!params.exclude && !params.include) {
+      func = function(properties) {
+        for(var attr in this) {
+          if(this.hasOwnProperty(attr) && _this.geomAttr !== attr) {
+            properties[attr] = this[attr];
+          }
+        }
+      };
+    } else if(params.include) {
+      func = function(properties) {
+        params.include.forEach(function(attr){
+          properties[attr] = this[attr];
+        }, this);
+      };
+    } else if(params.exclude) {
+      func = function(properties) {
+        for(var attr in this) {
+          if(this.hasOwnProperty(attr) && _this.geomAttr !== attr && (params.exclude.indexOf(attr) === -1)) {
+            properties[attr] = this[attr];
+          }
+        }
+      };
+    }
+
+    return function() {
+      var properties = {};
+
+      func.call(this, properties);
+
+      if(params.extra) { this.addExtra(properties, params.extra); }
+      return properties;
+    };
+  }
 
 }
 
